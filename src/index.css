@@ -1,0 +1,193 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* IoT Dashboard Design System - Tech-inspired colors and gradients */
+
+@layer base {
+  :root {
+    /* Core IoT Color Palette */
+    --background: 210 30% 98%;
+    --foreground: 210 20% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 210 20% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 20% 15%;
+
+    /* Primary - Tech Blue */
+    --primary: 210 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 210 100% 60%;
+
+    /* Secondary - Electric Cyan */
+    --secondary: 180 100% 90%;
+    --secondary-foreground: 180 100% 25%;
+
+    /* Success - IoT Green */
+    --success: 120 60% 50%;
+    --success-foreground: 0 0% 100%;
+
+    /* Warning - Energy Orange */
+    --warning: 30 100% 60%;
+    --warning-foreground: 0 0% 100%;
+
+    --muted: 210 40% 96%;
+    --muted-foreground: 210 15% 60%;
+
+    --accent: 200 100% 96%;
+    --accent-foreground: 200 100% 30%;
+
+    --destructive: 0 75% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 30% 90%;
+    --input: 210 30% 95%;
+    --ring: 210 100% 50%;
+
+    --radius: 0.75rem;
+
+    /* IoT Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(210 100% 50%), hsl(180 100% 45%));
+    --gradient-secondary: linear-gradient(135deg, hsl(180 100% 85%), hsl(200 100% 90%));
+    --gradient-accent: linear-gradient(135deg, hsl(120 60% 50%), hsl(150 60% 50%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(210 30% 98%));
+    --gradient-hero: linear-gradient(135deg, hsl(210 100% 50%) 0%, hsl(180 100% 45%) 50%, hsl(120 60% 50%) 100%);
+
+    /* Shadows with IoT theme */
+    --shadow-card: 0 4px 20px -2px hsl(210 100% 50% / 0.1);
+    --shadow-elevated: 0 8px 30px -4px hsl(210 100% 50% / 0.15);
+    --shadow-glow: 0 0 30px hsl(210 100% 50% / 0.3);
+
+    /* Sidebar */
+    --sidebar-background: 210 25% 97%;
+    --sidebar-foreground: 210 20% 20%;
+    --sidebar-primary: 210 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 30% 94%;
+    --sidebar-accent-foreground: 210 20% 20%;
+    --sidebar-border: 210 30% 88%;
+    --sidebar-ring: 210 100% 50%;
+
+    /* Animation */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: all 0.15s ease-out;
+  }
+
+  .dark {
+    /* Dark Theme - High-tech IoT */
+    --background: 210 30% 8%;
+    --foreground: 210 30% 95%;
+
+    --card: 210 25% 12%;
+    --card-foreground: 210 30% 95%;
+
+    --popover: 210 25% 12%;
+    --popover-foreground: 210 30% 95%;
+
+    --primary: 210 100% 55%;
+    --primary-foreground: 210 30% 8%;
+    --primary-glow: 210 100% 65%;
+
+    --secondary: 180 50% 20%;
+    --secondary-foreground: 180 100% 85%;
+
+    --success: 120 60% 45%;
+    --success-foreground: 210 30% 8%;
+
+    --warning: 30 100% 55%;
+    --warning-foreground: 210 30% 8%;
+
+    --muted: 210 25% 15%;
+    --muted-foreground: 210 15% 70%;
+
+    --accent: 200 80% 20%;
+    --accent-foreground: 200 100% 85%;
+
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 210 30% 95%;
+
+    --border: 210 25% 20%;
+    --input: 210 25% 15%;
+    --ring: 210 100% 55%;
+
+    /* Dark Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(210 100% 55%), hsl(180 100% 50%));
+    --gradient-secondary: linear-gradient(135deg, hsl(180 50% 15%), hsl(200 50% 20%));
+    --gradient-accent: linear-gradient(135deg, hsl(120 60% 45%), hsl(150 60% 45%));
+    --gradient-card: linear-gradient(145deg, hsl(210 25% 12%), hsl(210 30% 10%));
+    --gradient-hero: linear-gradient(135deg, hsl(210 100% 55%) 0%, hsl(180 100% 50%) 50%, hsl(120 60% 45%) 100%);
+
+    /* Dark Shadows */
+    --shadow-card: 0 4px 20px -2px hsl(0 0% 0% / 0.3);
+    --shadow-elevated: 0 8px 30px -4px hsl(0 0% 0% / 0.4);
+    --shadow-glow: 0 0 30px hsl(210 100% 55% / 0.4);
+
+    /* Dark Sidebar */
+    --sidebar-background: 210 30% 6%;
+    --sidebar-foreground: 210 30% 90%;
+    --sidebar-primary: 210 100% 55%;
+    --sidebar-primary-foreground: 210 30% 8%;
+    --sidebar-accent: 210 25% 10%;
+    --sidebar-accent-foreground: 210 30% 90%;
+    --sidebar-border: 210 25% 15%;
+    --sidebar-ring: 210 100% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground transition-colors duration-300;
+  }
+
+  /* Custom scrollbar for webkit browsers */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
+  }
+}
+
+@layer components {
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary via-accent to-success bg-clip-text text-transparent;
+  }
+
+  .card-gradient {
+    background: var(--gradient-card);
+    box-shadow: var(--shadow-card);
+  }
+
+  .glass-effect {
+    @apply backdrop-blur-sm bg-white/80 dark:bg-black/20 border border-white/20;
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite alternate;
+  }
+
+  @keyframes pulse-glow {
+    from {
+      box-shadow: 0 0 20px hsl(var(--primary) / 0.5);
+    }
+    to {
+      box-shadow: 0 0 30px hsl(var(--primary) / 0.8);
+    }
+  }
+}
