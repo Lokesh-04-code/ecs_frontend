@@ -93,7 +93,7 @@ function AIChat(): JSX.Element {
       (d) => d.voltage < maxVoltage - 2
     ).length;
 
-    if (voltageDrop >= 3 && lowVoltageReadings >= 5) {
+    if (voltageDrop >= 3) {
       // Sustained drop
       await sendEmailAlert(
         "⚠️ Solar Alert: Sustained Voltage Drop",
