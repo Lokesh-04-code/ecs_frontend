@@ -46,7 +46,7 @@ const AlertsGallery: React.FC = () => {
     };
 
     fetchAlerts();
-    const interval = setInterval(fetchAlerts, 5000);
+    const interval = setInterval(fetchAlerts, 15000);
 
     return () => clearInterval(interval);
   }, []);

@@ -1,26 +1,36 @@
-import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/hooks/use-toast';
-import { Lock, Mail, Zap } from 'lucide-react';
-import emailjs from 'emailjs-com';
+import React, { useState } from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import { Lock, Mail, Zap } from "lucide-react";
+import emailjs from "emailjs-com";
 
 const SERVICE_ID = "your_service_id";
 const TEMPLATE_ID = "your_template_id";
 const PUBLIC_KEY = "your_public_key";
 
-const sendWelcomeEmail = (email: string, type: 'signup' | 'signin') => {
+const sendWelcomeEmail = (email: string, type: "signup" | "signin") => {
   const templateParams = {
     user_email: email,
-    subject: type === 'signup' ? 'Welcome to IoT Data Visualization Dashboard' : 'Login Successful',
-    message: type === 'signup' 
-      ? 'Your account has been created successfully.' 
-      : "You've successfully logged into the IoT Data Visualization Dashboard.",
+    subject:
+      type === "signup"
+        ? "Welcome to IoT Data Visualization Dashboard"
+        : "Login Successful",
+    message:
+      type === "signup"
+        ? "Your account has been created successfully."
+        : "You've successfully logged into the IoT Data Visualization Dashboard.",
     time: new Date().toLocaleString(),
   };
 
@@ -35,11 +45,11 @@ const sendWelcomeEmail = (email: string, type: 'signup' | 'signin') => {
 };
 
 const Login: React.FC = () => {
-  const [signInEmail, setSignInEmail] = useState('');
-  const [signInPassword, setSignInPassword] = useState('');
-  const [signUpEmail, setSignUpEmail] = useState('');
-  const [signUpPassword, setSignUpPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [signInEmail, setSignInEmail] = useState("");
+  const [signInPassword, setSignInPassword] = useState("");
+  const [signUpEmail, setSignUpEmail] = useState("");
+  const [signUpPassword, setSignUpPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { login, signup, isAuthenticated } = useAuth();
   const { toast } = useToast();
@@ -50,7 +60,7 @@ const Login: React.FC = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!signInEmail || !signInPassword) {
       toast({
         title: "Missing Information",
@@ -61,12 +71,12 @@ const Login: React.FC = () => {
     }
 
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 800));
+    await new Promise((resolve) => setTimeout(resolve, 800));
 
     const success = await login(signInEmail, signInPassword);
-    
+
     if (success) {
-      sendWelcomeEmail(signInEmail, 'signin');
+      sendWelcomeEmail(signInEmail, "signin");
       toast({
         title: "Login Successful",
         description: "Welcome back! Redirecting to dashboard...",
@@ -74,11 +84,12 @@ const Login: React.FC = () => {
     } else {
       toast({
         title: "Login Failed",
-        description: "Invalid credentials. Please check your email and password.",
+        description:
+          "Invalid credentials. Please check your email and password.",
         variant: "destructive",
       });
     }
-    
+
     setIsLoading(false);
   };
 
@@ -113,12 +124,12 @@ const Login: React.FC = () => {
     }
 
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 800));
+    await new Promise((resolve) => setTimeout(resolve, 800));
 
     const success = await signup(signUpEmail, signUpPassword);
-    
+
     if (success) {
-      sendWelcomeEmail(signUpEmail, 'signup');
+      sendWelcomeEmail(signUpEmail, "signup");
       toast({
         title: "Account Created",
         description: "Welcome! Your account has been created successfully.",
@@ -130,14 +141,14 @@ const Login: React.FC = () => {
         variant: "destructive",
       });
     }
-    
+
     setIsLoading(false);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/20 to-accent/20 p-4">
       <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
-      
+
       <Card className="w-full max-w-md relative bg-gradient-card backdrop-blur-sm border-border/50 shadow-elevated">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto h-16 w-16 rounded-full bg-gradient-primary flex items-center justify-center animate-pulse-glow">
@@ -152,21 +163,25 @@ const Login: React.FC = () => {
             </CardDescription>
           </div>
         </CardHeader>
-        
+
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="signin">Sign In</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="signin">
-              <form onSubmit={handleSignIn} onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleSignIn(e as any);
-                }
-              }} className="space-y-4">
+              <form
+                onSubmit={handleSignIn}
+                onKeyDown={(e: React.KeyboardEvent) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleSignIn(e as unknown as React.FormEvent);
+                  }
+                }}
+                className="space-y-4"
+              >
                 <div className="space-y-2">
                   <Label htmlFor="signin-email" className="text-sm font-medium">
                     Email
@@ -184,9 +199,12 @@ const Login: React.FC = () => {
                     />
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
-                  <Label htmlFor="signin-password" className="text-sm font-medium">
+                  <Label
+                    htmlFor="signin-password"
+                    className="text-sm font-medium"
+                  >
                     Password
                   </Label>
                   <div className="relative">
@@ -202,7 +220,7 @@ const Login: React.FC = () => {
                     />
                   </div>
                 </div>
-                
+
                 <Button
                   type="submit"
                   className="w-full bg-gradient-primary hover:opacity-90 transition-all duration-300"
@@ -214,18 +232,22 @@ const Login: React.FC = () => {
                       <span>Signing in...</span>
                     </div>
                   ) : (
-                    'Sign In'
+                    "Sign In"
                   )}
                 </Button>
               </form>
             </TabsContent>
-            
+
             <TabsContent value="signup">
-              <form onSubmit={handleSignUp} onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                }
-              }} className="space-y-4">
+              <form
+                onSubmit={handleSignUp}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                  }
+                }}
+                className="space-y-4"
+              >
                 <div className="space-y-2">
                   <Label htmlFor="signup-email" className="text-sm font-medium">
                     Email
@@ -243,9 +265,12 @@ const Login: React.FC = () => {
                     />
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password" className="text-sm font-medium">
+                  <Label
+                    htmlFor="signup-password"
+                    className="text-sm font-medium"
+                  >
                     Password
                   </Label>
                   <div className="relative">
@@ -261,9 +286,12 @@ const Login: React.FC = () => {
                     />
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
-                  <Label htmlFor="confirm-password" className="text-sm font-medium">
+                  <Label
+                    htmlFor="confirm-password"
+                    className="text-sm font-medium"
+                  >
                     Confirm Password
                   </Label>
                   <div className="relative">
@@ -279,7 +307,7 @@ const Login: React.FC = () => {
                     />
                   </div>
                 </div>
-                
+
                 <Button
                   type="submit"
                   className="w-full bg-gradient-primary hover:opacity-90 transition-all duration-300"
@@ -291,7 +319,7 @@ const Login: React.FC = () => {
                       <span>Creating account...</span>
                     </div>
                   ) : (
-                    'Sign Up'
+                    "Sign Up"
                   )}
                 </Button>
               </form>

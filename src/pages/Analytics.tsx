@@ -56,62 +56,52 @@ const Analytics: React.FC = () => {
     };
   };
 
-  // ✅ Adjusted metric display units and scaling
+  // ✅ Updated metrics to match dashboard data structure
   const metrics = [
     {
       key: "current",
       name: "Current",
       unit: "A",
       color: "hsl(var(--primary))",
-      scale: 0.01, // divide values like 250 -> 2.5 A
     },
     {
       key: "voltage",
       name: "Voltage",
       unit: "V",
       color: "hsl(var(--success))",
-      scale: 1, // keep as is
     },
     {
       key: "powerOutput",
       name: "Power Output",
       unit: "W",
       color: "hsl(var(--primary))",
-      scale: 1, // keep as is
     },
     {
       key: "temperature",
       name: "Temperature",
       unit: "°C",
       color: "hsl(var(--warning))",
-      scale: 1,
     },
     {
       key: "humidity",
       name: "Humidity",
       unit: "%",
       color: "hsl(var(--secondary))",
-      scale: 1,
     },
     {
-      key: "lighting",
-      name: "Solar Intensity",
+      key: "radiation", // ✅ Changed from "lighting" to "radiation" to match dashboard
+      name: "Solar Radiation",
       unit: "W/m²",
       color: "hsl(var(--accent))",
-      scale: 1 / 120, // convert lux → W/m²
     },
   ];
 
-  // ✅ Pre-scale chart data
-  const scaledData = chartData.map((item) => {
-    const updated: Record<string, unknown> = { ...item };
-    metrics.forEach((m) => {
-      if (item[m.key as keyof typeof item] !== undefined) {
-        updated[m.key] = (item[m.key as keyof typeof item] as number) * m.scale;
-      }
-    });
-    return updated;
-  });
+  // Debug: Check if radiation data exists
+  console.log("Analytics Chart data sample:", chartData.slice(0, 3));
+  console.log(
+    "Radiation values:",
+    chartData.map((item) => item.radiation).filter(Boolean)
+  );
 
   return (
     <div className="space-y-6">
@@ -163,16 +153,16 @@ const Analytics: React.FC = () => {
         <Card className="bg-gradient-card shadow-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Current Voltage
+              Current Radiation
             </CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
+            <Sun className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-primary">
-              {(latestValues?.voltage || 0).toFixed(2)} V
+            <div className="text-2xl font-bold text-accent">
+              {(latestValues?.radiation || 0).toFixed(2)} W/m²
             </div>
             <p className="text-xs text-muted-foreground">
-              Battery voltage level
+              Solar radiation intensity
             </p>
           </CardContent>
         </Card>
@@ -189,7 +179,7 @@ const Analytics: React.FC = () => {
         <CardContent>
           <div className="h-96">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={scaledData}>
+              <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="time" fontSize={12} />
                 <YAxis fontSize={12} />
@@ -216,11 +206,22 @@ const Analytics: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {metrics.map((metric) => {
           const minMax = getMinMax(metric.key);
+          const hasData = chartData.some(
+            (item) =>
+              item[metric.key as keyof typeof item] !== undefined &&
+              item[metric.key as keyof typeof item] !== null
+          );
+
           return (
             <Card key={metric.key} className="bg-gradient-card shadow-card">
               <CardHeader>
                 <CardTitle className="text-lg">
                   {metric.name} Analysis
+                  {!hasData && (
+                    <span className="text-sm text-muted-foreground ml-2">
+                      (No data available)
+                    </span>
+                  )}
                 </CardTitle>
                 <CardDescription>
                   Statistical overview and visualization
@@ -249,27 +250,36 @@ const Analytics: React.FC = () => {
                 </div>
 
                 <div className="h-48">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={scaledData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="time" fontSize={10} />
-                      <YAxis fontSize={10} />
-                      <Tooltip
-                        formatter={(value: number) => [
-                          `${value} ${metric.unit}`,
-                          metric.name,
-                        ]}
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey={metric.key}
-                        stroke={metric.color}
-                        fill={metric.color}
-                        fillOpacity={0.2}
-                        strokeWidth={2}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
+                  {hasData ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="time" fontSize={10} />
+                        <YAxis fontSize={10} />
+                        <Tooltip
+                          formatter={(value: number) => [
+                            `${value} ${metric.unit}`,
+                            metric.name,
+                          ]}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey={metric.key}
+                          stroke={metric.color}
+                          fill={metric.color}
+                          fillOpacity={0.2}
+                          strokeWidth={2}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                      <div className="text-center">
+                        <Sun className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                        <p>No {metric.name.toLowerCase()} data available</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

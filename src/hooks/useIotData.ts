@@ -35,40 +35,63 @@ export interface ProcessedSensorData {
   powerOutput: number; // W
 }
 
+// ✅ Increased results and added cache buster
 const THINGSPEAK_API_URL =
-  "https://api.thingspeak.com/channels/3054959/feeds.json?api_key=Q598Z948DH3KQH7C&results=20";
+  "https://api.thingspeak.com/channels/3054959/feeds.json?api_key=Q598Z948DH3KQH7C&results=50";
 
 export const useIotData = () => {
   const [data, setData] = useState<IoTResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [fetchCount, setFetchCount] = useState<number>(0);
 
   const fetchData = useCallback(async () => {
     try {
+      console.log(
+        `🔄 [${new Date().toLocaleTimeString()}] Fetching IoT data...`
+      );
       setLoading(true);
       setError(null);
 
-      const response = await fetch(THINGSPEAK_API_URL);
+      // ✅ Add cache buster to prevent caching
+      const url = `${THINGSPEAK_API_URL}&_=${Date.now()}`;
+
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const result: IoTResponse = await response.json();
-      console.log(result);
+
+      console.log(`📊 [${new Date().toLocaleTimeString()}] Data received:`, {
+        feedsCount: result.feeds.length,
+        latestEntryId: result.channel.last_entry_id,
+        latestData: result.feeds[result.feeds.length - 1],
+      });
+
       setData(result);
       setLastUpdated(new Date());
+      setFetchCount((prev) => prev + 1);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-      console.error("Error fetching IoT data:", err);
+      const errorMessage =
+        err instanceof Error ? err.message : "An error occurred";
+      console.error(
+        `❌ [${new Date().toLocaleTimeString()}] Error fetching IoT data:`,
+        errorMessage
+      );
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchData();
+    fetchData(); // Initial fetch
+
+    // ✅ Fetch every 30 seconds
     const interval = setInterval(fetchData, 30000);
+
     return () => clearInterval(interval);
   }, [fetchData]);
 
@@ -87,7 +110,7 @@ export const useIotData = () => {
     const radiation = lightingLux * LUX_TO_W_PER_M2; // Lux → W/m²
     const powerOutput = voltage * currentA; // W
 
-    return {
+    const processedData = {
       current: currentA,
       voltage,
       temperature: parseFloat(latest.field3) || 0,
@@ -96,40 +119,44 @@ export const useIotData = () => {
       timestamp: latest.created_at,
       powerOutput,
     };
+
+    console.log(
+      `📈 [${new Date().toLocaleTimeString()}] Latest processed values:`,
+      processedData
+    );
+    return processedData;
   };
 
-  // ✅ Process chart data
+  // ✅ Process chart data - REMOVED sorting to preserve Thingspeak order
   const getChartData = () => {
     if (!data || !data.feeds.length) return [];
 
-    return (
-      data.feeds
-        // sort by newest first (optional)
-        .sort(
-          (a, b) =>
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        )
-        .map((feed, index) => {
-          const currentA = (parseFloat(feed.field1) || 0) / 1000; // mA → A
-          const voltage = parseFloat(feed.field2) || 0;
-          const lightingLux = parseFloat(feed.field5) || 0;
+    const chartData = data.feeds.map((feed, index) => {
+      const currentA = (parseFloat(feed.field1) || 0) / 1000; // mA → A
+      const voltage = parseFloat(feed.field2) || 0;
+      const lightingLux = parseFloat(feed.field5) || 0;
 
-          const radiation = lightingLux * LUX_TO_W_PER_M2; // W/m²
-          const powerOutput = voltage * currentA; // W
+      const radiation = lightingLux * LUX_TO_W_PER_M2; // W/m²
+      const powerOutput = voltage * currentA; // W
 
-          return {
-            index: index + 1,
-            time: new Date(feed.created_at).toLocaleTimeString(),
-            timestamp: feed.created_at,
-            current: currentA,
-            voltage,
-            temperature: parseFloat(feed.field3) || 0,
-            humidity: parseFloat(feed.field4) || 0,
-            radiation,
-            powerOutput,
-          };
-        })
+      return {
+        index: index + 1,
+        time: new Date(feed.created_at).toLocaleTimeString(),
+        timestamp: feed.created_at,
+        current: currentA,
+        voltage,
+        temperature: parseFloat(feed.field3) || 0,
+        humidity: parseFloat(feed.field4) || 0,
+        radiation,
+        powerOutput,
+      };
+    });
+
+    console.log(
+      `📊 [${new Date().toLocaleTimeString()}] Chart data points:`,
+      chartData.length
     );
+    return chartData;
   };
 
   return {
@@ -140,5 +167,6 @@ export const useIotData = () => {
     refetch: fetchData,
     latestValues: getLatestValues(),
     chartData: getChartData(),
+    fetchCount, // ✅ Added to track updates
   };
 };

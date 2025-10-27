@@ -31,7 +31,7 @@ function AIChat(): JSX.Element {
 
       await emailjs.send(
         "service_tkttya7", // from EmailJS dashboard
-        "template_o9h463x", // from EmailJS dashboard
+        "template_hwh57wa", // from EmailJS dashboard
         params,
         "p-ka2jM3uNb5YWQMO" // from EmailJS dashboard
       );
@@ -50,9 +50,9 @@ function AIChat(): JSX.Element {
     }
 
     setLoading(true);
-    setAiResponse("Analyzing last 30–40 IoT entries with AI...");
+    setAiResponse("Analyzing last 30 IoT entries for sustained anomalies...");
 
-    const recentData = chartData.slice(0, 40);
+    const recentData = chartData.slice(0, 30); // Analyze last 30 entries
     const summarizedData = recentData.map((d) => ({
       time: d.time,
       voltage: d.voltage,
@@ -63,40 +63,112 @@ function AIChat(): JSX.Element {
     }));
 
     const latest = summarizedData[0];
-    const previous = summarizedData[1];
-    const voltageDrop = previous ? previous.voltage - latest.voltage : 0;
 
-    if (latest.current === 0) {
+    // --- IMPROVED ALERT CONDITIONS ---
+    let alertTriggered = false;
+
+    // Alert 1: Sustained current drop (0A for multiple readings)
+    const zeroCurrentReadings = summarizedData
+      .slice(0, 5) // Check last 5 readings
+      .filter((d) => d.current === 0).length;
+
+    if (zeroCurrentReadings >= 3) {
+      // If 3 out of 5 readings show 0A
       await sendEmailAlert(
-        "⚠️ Solar Alert: Current Dropped to 0A",
-        `Alert! Current dropped to 0A at ${latest.time}. Possible battery disconnection or system fault.`
+        "⚠️ Solar Alert: Sustained Current Drop",
+        `Alert! Current dropped to 0A for ${zeroCurrentReadings} consecutive readings. Possible battery disconnection or system fault. Latest reading at ${latest.time}.`
       );
+      alertTriggered = true;
     }
 
-    if (voltageDrop >= 3) {
+    // Alert 2: Sustained voltage drop (analyze trend over last 10 readings)
+    const last10Readings = summarizedData.slice(0, 10);
+    const voltageTrend = last10Readings.map((d) => d.voltage);
+    const maxVoltage = Math.max(...voltageTrend);
+    const minVoltage = Math.min(...voltageTrend);
+    const voltageDrop = maxVoltage - minVoltage;
+
+    // Check if voltage drop is sustained (not just a temporary dip)
+    const lowVoltageReadings = last10Readings.filter(
+      (d) => d.voltage < maxVoltage - 2
+    ).length;
+
+    if (voltageDrop >= 3 && lowVoltageReadings >= 5) {
+      // Sustained drop
       await sendEmailAlert(
-        "⚠️ Solar Alert: Voltage Drop Detected",
-        `Voltage dropped by ${voltageDrop.toFixed(2)}V at ${
-          latest.time
-        }. Possible low battery or shading issue.`
+        "⚠️ Solar Alert: Sustained Voltage Drop",
+        `Voltage dropped by ${voltageDrop.toFixed(
+          2
+        )}V over last 10 readings. ${lowVoltageReadings} readings show significant drop. Possible battery issue or persistent shading.`
       );
+      alertTriggered = true;
+    }
+
+    // Alert 3: Critical low voltage (sustained, not temporary)
+    const criticalVoltageReadings = summarizedData
+      .slice(0, 5) // Check last 5 readings
+      .filter((d) => d.voltage < 3).length;
+
+    if (criticalVoltageReadings >= 3) {
+      // If 3 out of 5 readings are critical
+      await sendEmailAlert(
+        "🔴 CRITICAL: Sustained Low Voltage",
+        `CRITICAL! Voltage below 3V for ${criticalVoltageReadings} consecutive readings. System at risk of shutdown. Check battery immediately! Latest: ${latest.voltage.toFixed(
+          2
+        )}V at ${latest.time}.`
+      );
+      alertTriggered = true;
+    }
+
+    // Alert 4: Gradual voltage decline over last 15 readings
+    const last15Readings = summarizedData.slice(0, 15);
+    if (last15Readings.length >= 10) {
+      const firstHalfAvg =
+        last15Readings.slice(0, 5).reduce((sum, d) => sum + d.voltage, 0) / 5;
+      const secondHalfAvg =
+        last15Readings.slice(-5).reduce((sum, d) => sum + d.voltage, 0) / 5;
+      const gradualDrop = firstHalfAvg - secondHalfAvg;
+
+      if (gradualDrop >= 2) {
+        // Gradual decline of 2V or more
+        await sendEmailAlert(
+          "📉 Solar Alert: Gradual Voltage Decline",
+          `Gradual voltage decline detected: dropped ${gradualDrop.toFixed(
+            2
+          )}V over last 15 readings. Possible battery draining faster than charging.`
+        );
+        alertTriggered = true;
+      }
     }
 
     const prompt = `
 You are an IoT system analyst for a solar power station.
-Below are the last ${
-      summarizedData.length
-    } readings of voltage (V), current (A), power (W), temperature (°C), and humidity (%).
+Below are the last 30 readings of voltage (V), current (A), power (W), temperature (°C), and humidity (%).
 
 Data:
 ${JSON.stringify(summarizedData, null, 2)}
 
-Rules:
-- Normally, higher sunlight & temperature → slight voltage increase.
-- If temperature high but voltage does not rise → check for dust/degradation.
-- If current=0 and voltage<4 → battery low/disconnected.
-- Detect sudden voltage/current drops.
-- Reply briefly (max 5 lines).
+Key patterns to analyze:
+- Look for SUSTAINED voltage drops, not temporary fluctuations
+- Check if low voltage readings persist across multiple data points
+- Analyze if voltage recovers quickly after drops (healthy system)
+- Look for gradual declining trends over 10+ readings
+- Check correlation between temperature, sunlight, and voltage
+- Focus on patterns that indicate real issues, not normal variations
+
+Recent analysis:
+${
+  alertTriggered
+    ? "ALERTS: Sustained anomalies detected requiring attention."
+    : "No sustained anomalies detected."
+}
+- Voltage range in last 10 readings: ${minVoltage.toFixed(
+      2
+    )}V to ${maxVoltage.toFixed(2)}V
+- Current zero readings in last 5: ${zeroCurrentReadings}
+- Critical voltage readings in last 5: ${criticalVoltageReadings}
+
+Reply with brief analysis (3-4 lines) focusing on sustained patterns only.
 `;
 
     try {
@@ -112,7 +184,7 @@ Rules:
             model: HF_MODEL,
             provider: "novita",
             messages: [{ role: "user", content: prompt }],
-            max_tokens: 300,
+            max_tokens: 250,
             temperature: 0.6,
           }),
         }
@@ -121,7 +193,9 @@ Rules:
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
       const message = data?.choices?.[0]?.message?.content;
-      setAiResponse(message || "✅ System stable. No anomalies detected.");
+      setAiResponse(
+        message || "✅ System stable. No sustained anomalies detected."
+      );
     } catch (error) {
       console.error("Hugging Face API Error:", error);
       setAiResponse("⚠️ Fallback: Unable to reach AI model. Check your key.");
@@ -139,8 +213,8 @@ Rules:
             <span>AI Trend Insights</span>
           </CardTitle>
           <CardDescription>
-            Analyze last 30–40 IoT readings for voltage/current drops or
-            anomalies.
+            Analyzes last 30 IoT readings for SUSTAINED anomalies. Alerts only
+            trigger for persistent issues, not temporary fluctuations.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -148,7 +222,9 @@ Rules:
             className={`p-4 rounded-lg transition-all duration-300 min-h-[100px] flex items-center ${
               loading
                 ? "bg-yellow-100/60 text-yellow-700 animate-pulse"
-                : aiResponse.includes("⚠️")
+                : aiResponse.includes("⚠️") ||
+                  aiResponse.includes("CRITICAL") ||
+                  aiResponse.includes("ALERTS")
                 ? "bg-red-100/70 text-red-800"
                 : "bg-white/70 text-gray-900"
             }`}
@@ -156,7 +232,7 @@ Rules:
             {loading ? (
               <div className="flex items-center">
                 <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                Analyzing with AI...
+                Analyzing last 30 entries for sustained patterns...
               </div>
             ) : (
               aiResponse
@@ -176,7 +252,7 @@ Rules:
               <RefreshCw
                 className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
               />
-              Analyze
+              Analyze Trends
             </Button>
           </div>
         </CardContent>
