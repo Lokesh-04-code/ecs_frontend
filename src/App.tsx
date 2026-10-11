@@ -12,7 +12,6 @@ import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import Sidebar from "./components/Sidebar";
 import NotFound from "./pages/NotFound";
-import AlertsGallery from "./pages/AlertsGallery";
 import AIChat from "./pages/AiChat"; // ✅ already imported
 
 const queryClient = new QueryClient();
@@ -86,20 +85,6 @@ const App = () => (
                 }
               />
 
-              {/* 🔹 Alerts Page */}
-              <Route
-                path="/alerts"
-                element={
-                  <ProtectedRoute>
-                    <div className="flex min-h-screen w-full">
-                      <Sidebar />
-                      <main className="flex-1 p-6 bg-background">
-                        <AlertsGallery />
-                      </main>
-                    </div>
-                  </ProtectedRoute>
-                }
-              />
 
               {/* 🔹 ✅ New AI Chat Page */}
               <Route

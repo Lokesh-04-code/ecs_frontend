@@ -8,8 +8,7 @@ import {
   Moon,
   Sun,
   Monitor,
-  AlertTriangle,
-  MessageSquare, // ✅ new icon for AI Chat
+  MessageSquare,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../components/ThemeProvider";
@@ -28,12 +27,11 @@ const Sidebar: React.FC = () => {
 
   // ✅ Added AI Chat to the navigation list
   const navigation = [
-    { name: "Dashboard", href: "/dashboard", icon: Home },
-    { name: "Analytics", href: "/analytics", icon: BarChart3 },
-    { name: "Alerts", href: "/alerts", icon: AlertTriangle },
-    { name: "AI Report", href: "/aichat", icon: MessageSquare }, // ✅ added AI Chat
-    { name: "Settings", href: "/settings", icon: Settings },
-  ];
+  { name: "Dashboard", href: "/dashboard", icon: Home },
+  { name: "Analytics", href: "/analytics", icon: BarChart3 },
+  { name: "AI Report", href: "/aichat", icon: MessageSquare },
+  { name: "Settings", href: "/settings", icon: Settings },
+];
 
   return (
     <div className="flex h-full w-64 flex-col bg-gradient-to-b from-sidebar to-sidebar/80 backdrop-blur-sm border-r border-sidebar-border">
